@@ -52,10 +52,11 @@ void Server::handleClient(asio::ip::tcp::socket socket)
                     Response res;
                     Middleware middleware = router.getMiddleware(req.method, req.target);
 
+                    res.status = 200;
                     bool resultMiddleware = middleware(req, res);
 
                     if(!resultMiddleware){
-                        res.status = 400;
+                        if(res.status == 200) res.status = 400;
                         Struct data;
                         data.set("message", "Request rejected by middleware");
                         response(socket, res.json(data));
