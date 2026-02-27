@@ -49,9 +49,21 @@ void Server::handleClient(asio::ip::tcp::socket socket)
                         return;
                     }
 
+                    Response res;
+                    Middleware middleware = router.getMiddleware(req.method, req.target);
+
+                    bool resultMiddleware = middleware(req, res);
+
+                    if(!resultMiddleware){
+                        res.status = 400;
+                        Struct data;
+                        data.set("message", "Request rejected by middleware");
+                        response(socket, res.json(data));
+                        return;
+                    }
+
                     Handler handler = router.getHandler(req.method, req.target);
                     if (!handler) {
-                        Response res;
                         res.status = 500;
                         Struct data;
                         data.set("message", "Handler not found");
@@ -59,7 +71,6 @@ void Server::handleClient(asio::ip::tcp::socket socket)
                         return;
                     }
 
-                    Response res;
                     res.status = 200;
                     Struct result = handler(req, res);
                     response(socket, res.json(result));
