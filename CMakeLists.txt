@@ -16,6 +16,7 @@ target_include_directories(core PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/include/serializer
     ${CMAKE_CURRENT_SOURCE_DIR}/include/deserializer
     ${CMAKE_CURRENT_SOURCE_DIR}/include/threads
+    ${CMAKE_CURRENT_SOURCE_DIR}/include/middleware
 
 )
 
