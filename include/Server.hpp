@@ -2,6 +2,7 @@
 
 #include <asio.hpp>
 #include <iostream>
+#include <fstream>
 #include <thread>
 
 #include "Request.hpp"
@@ -10,6 +11,7 @@
 #include "Value.hpp"
 #include "Struct.hpp"
 #include "ThreadPool.hpp"
+
 
 namespace srv {
 
@@ -31,6 +33,8 @@ public:
                     size_t threads = std::thread::hardware_concurrency());
 
     void run(const std::string& text);
+
+
 };
 
 }
