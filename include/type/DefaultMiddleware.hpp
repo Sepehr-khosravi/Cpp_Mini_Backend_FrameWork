@@ -1,7 +1,11 @@
 #pragma once
 #include "Response.hpp"
 #include "Request.hpp"
+#include "middleware.hpp"
 
-extern bool DefaultMiddleware(const Request &req, Response &res){
-  return true;
+Middleware DefaultMiddleware = [](const Request &req, Response &res)->bool{
+    return true;
 };
+
+
+
