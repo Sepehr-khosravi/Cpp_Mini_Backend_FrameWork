@@ -3,18 +3,15 @@
 #include <sys/wait.h>
 #include <cstdlib>
 using namespace std;
-#include "check.h"
-#include "spawn_orphan.h"
-#include "executeAddress.h"
-
+#include "address.hpp"
 #include <signal.h>
 
 int main() {
-    std::string server_path = getAddress();
+    std::string server_path = getServerAddress();
     
     std::cout << "Cleaning up old server processes..." << std::endl;
     system("pkill -f \"build/run\" 2>/dev/null && clear");
-    sleep(1); 
+    sleep(1);  
     
     while (true) {
         pid_t server_pid = fork();
