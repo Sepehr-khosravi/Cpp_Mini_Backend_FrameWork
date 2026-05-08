@@ -3,10 +3,10 @@
 #include <string>
 #include <unordered_map>
 #include <memory>
-// #include "Struct.hpp"
+#include <optional>
 
-class Struct;
-
+// Forward declaration of Struct
+struct Struct;
 
 using Value = std::variant<
     int,
@@ -14,9 +14,11 @@ using Value = std::variant<
     std::string,
     bool,
     std::unordered_map<std::string, Struct>,
-    Struct
+    Struct,
+    std::optional<Struct>
 >;
 
-
+// Function declarations
 std::string serializeValue(const Value& value);
 std::string serializeStruct(const Struct& data);
+std::string serializeStruct(const std::optional<Struct>& data);
