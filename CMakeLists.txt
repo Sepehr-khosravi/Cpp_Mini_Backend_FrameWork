@@ -5,10 +5,12 @@ add_library(core STATIC
     ./src/Request.cpp
     ./src/Router.cpp
     ./src/Response.cpp
+    ./src/Path.cpp
 )
 
 target_include_directories(core PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/include
+    ${CMAKE_CURRENT_SOURCE_DIR}/health
     ${CMAKE_CURRENT_SOURCE_DIR}/lib/asio/asio/include
     ${CMAKE_CURRENT_SOURCE_DIR}/include/structs
     ${CMAKE_CURRENT_SOURCE_DIR}/include/type
@@ -17,7 +19,6 @@ target_include_directories(core PUBLIC
     ${CMAKE_CURRENT_SOURCE_DIR}/include/deserializer
     ${CMAKE_CURRENT_SOURCE_DIR}/include/threads
     ${CMAKE_CURRENT_SOURCE_DIR}/include/middleware
-
 )
 
 target_compile_definitions(core PUBLIC ASIO_STANDALONE)
