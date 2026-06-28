@@ -6,4 +6,4 @@
 #include<functional>
 class Router;
 
-using Handler = std::function<Struct(const Request&, Response&)>;
+using Handler = std::function<std::optional<Struct>(const Request&, Response&)>;

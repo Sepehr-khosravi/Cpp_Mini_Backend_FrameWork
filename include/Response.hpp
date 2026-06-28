@@ -1,35 +1,26 @@
 #pragma once
-#include <iostream>
 #include <string>
-#include <unordered_map>
-#include <variant>
-#include <memory>
 #include "Value.hpp"
 #include "Struct.hpp"
-#include "Serializing.hpp"
 #include "ResponseData.hpp"
 
-
-
-class Response{
-    public :
-        std::string setStatusText() const;
-    public:
-
-        int status;
-        std::string status_text = setStatusText();
-        Struct headers;
-        std::string body;
-    public:
-        std::string parse_response(Value data);
-        std::string json(Value data);
-
-        void setHeader(std::string &key, std::string &value);
-
+class Response {
+public:
+    int status = 200;
+    std::string status_text;
+    Struct headers;
+    std::string body;
+    std::string htmlContent;
+    bool pageError = false;
+    bool hasPage = false;
     
-        std::string serializing(ResponseData &data);
-
-
-
-    
+    std::string setStatusText() const;
+    std::string parse_response(const Value& data);  
+    std::string json(const Value& data);            
+    std::string send(const Value& data, const std::string& page);  
+    void setHeader(const std::string& key, const std::string& value);
+    void render(const std::string& htmlAddress);
+    std::string load();
+    bool checkPageError();
+    std::string serializing(ResponseData& data);
 };

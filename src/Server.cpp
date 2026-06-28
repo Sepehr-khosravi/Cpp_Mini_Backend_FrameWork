@@ -1,5 +1,9 @@
 #include "Server.hpp"
 
+//error exceptions
+#include <stdexcept>
+
+//getting path
 using namespace srv;
 
 Server::Server(int port, size_t threads)
@@ -44,8 +48,11 @@ void Server::handleClient(asio::ip::tcp::socket socket)
                         Response res;
                         res.status = 404;
                         Struct data;
-                        data.set("message", "Not Found");
-                        response(socket, res.json(data));
+                        res.render("/external/core/src/notfound.html");
+                        std::string notFoundHtml = res.load();
+                        // FIX: Convert string literal to std::string
+                        data.set("message", std::string("Not Found"));
+                        response(socket, res.send(data, notFoundHtml));
                         return;
                     }
 
@@ -58,7 +65,8 @@ void Server::handleClient(asio::ip::tcp::socket socket)
                     if(!resultMiddleware){
                         if(res.status == 200) res.status = 400;
                         Struct data;
-                        data.set("message", "Request rejected by middleware");
+                        // FIX: Convert string literal to std::string
+                        data.set("message", std::string("Request rejected by middleware"));
                         response(socket, res.json(data));
                         return;
                     }
@@ -67,20 +75,47 @@ void Server::handleClient(asio::ip::tcp::socket socket)
                     if (!handler) {
                         res.status = 500;
                         Struct data;
-                        data.set("message", "Handler not found");
+                        // FIX: Convert string literal to std::string
+                        data.set("message", std::string("Handler not found"));
                         response(socket, res.json(data));
                         return;
                     }
 
                     res.status = 200;
-                    Struct result = handler(req, res);
-                    response(socket, res.json(result));
+                    std::optional<Struct> result = handler(req, res);
+
+                    // Checking does res have page for loading?
+                    if(res.hasPage){
+                        res.headers.set("Content-Type", "text/html");
+                        res.headers.set("charset", "utf-8");
+                        if(res.checkPageError()){
+                            res.hasPage = false;
+                        }
+                        std::string html = res.load();
+                        // FIX: Check if result has value before sending
+                        if (result.has_value()) {
+                            response(socket, res.send(result.value(), "\n" + html + "\n"));
+                        } else {
+                            // Create empty struct if no result
+
+                            Struct emptyStruct;
+                            response(socket, res.send(emptyStruct, "\n" + html + "\n"));
+                        }
+                        return;
+                    }
+                    
+                    if(!result.has_value()){
+                        std::cerr << "you must at least return something as your body or your page that you want." << std::endl;
+                        return; 
+                    }
+
+                    response(socket, res.json(result.value()));
 
                 } catch (const std::exception& e) {
                     Response res;
                     res.status = 500;
                     Struct data;
-                    data.set("message", e.what());
+                    data.set("message", std::string(e.what()));
                     response(socket, res.json(data));
                 }
             }
@@ -93,28 +128,34 @@ void Server::handleClient(asio::ip::tcp::socket socket)
 
 void Server::run(const std::string& text)
 {
-    std::cout << text << std::endl;
-    std::cout << "Server running with "
-              << thread_count
-              << " worker threads" << std::endl;
-
-    while (true) {
-        asio::ip::tcp::socket socket(io_context);
-        asio::error_code ec;
-
-        acceptor.accept(socket, ec);
-        if (ec) {
-            std::cerr << "Accept error: " << ec.message() << std::endl;
-            continue;
+    try {
+        std::cout << text << std::endl;
+        std::cout << "Server running with "
+                  << thread_count
+                  << " worker threads" << std::endl;
+   
+        while (true) {
+            asio::ip::tcp::socket socket(io_context);
+            asio::error_code ec;
+   
+            acceptor.accept(socket, ec);
+            if (ec) {
+                std::cerr << "Accept error: " << ec.message() << std::endl;
+                continue;
+            }
+   
+            auto endpoint = socket.remote_endpoint(ec);
+            if (!ec) {
+                std::cout << "New connection from "
+                          << endpoint.address().to_string()
+                          << ":" << endpoint.port() << std::endl;
+            }
+   
+            handleClient(std::move(socket));
         }
-
-        auto endpoint = socket.remote_endpoint(ec);
-        if (!ec) {
-            std::cout << "New connection from "
-                      << endpoint.address().to_string()
-                      << ":" << endpoint.port() << std::endl;
-        }
-
-        handleClient(std::move(socket));
+    }
+    catch(const std::runtime_error &e){
+        std::cerr << "Error : " << e.what() << std::endl;
+        throw;
     }
 }

@@ -1,18 +1,7 @@
 #pragma once
 #include <string>
-#include <memory>
-#include <unordered_map>
-#include <variant>
-#include "Struct.hpp"
 #include "Value.hpp"
-
-class Struct;
-
-std::string serializeValue(const Value& value);
-std::string serializeStruct(const Struct& data);
-
-
-inline std::string serializeStruct(const Struct&);
+#include "Struct.hpp"
 
 inline std::string serializeValue(const Value& value) {
     return std::visit([](auto&& v) -> std::string {
@@ -28,19 +17,15 @@ inline std::string serializeValue(const Value& value) {
             return v ? "true" : "false";
         }
         else if constexpr (std::is_same_v<T, std::string>) {
-            return "\"" + v + "\"";
+            return v;
         }
-        else if constexpr (
-            std::is_same_v<T,
-            std::unordered_map<std::string, std::shared_ptr<Struct>>>
-        ) {
+        else if constexpr (std::is_same_v<T, std::unordered_map<std::string, Struct>>) {
             std::string out = "{";
             bool first = true;
-            for (const auto& [k, ptr] : v) {
+            for (const auto& [k, struct_val] : v) {
                 if (!first) out += ",";
                 first = false;
-                out += "\"" + k + "\":";
-                out += ptr ? serializeStruct(*ptr) : "null";
+                out += "\"" + k + "\":" + serializeStruct(struct_val);
             }
             out += "}";
             return out;
@@ -48,22 +33,36 @@ inline std::string serializeValue(const Value& value) {
         else if constexpr (std::is_same_v<T, Struct>) {
             return serializeStruct(v);
         }
+        else if constexpr (std::is_same_v<T, std::optional<Struct>>) {
+            if (!v.has_value()) {
+                std::cerr << "Serializing Data Error : you must return at least something to take back data." << std::endl;
+                return "null";
+            }
+            return serializeStruct(v.value());
+        }
         else {
             return "null";
         }
     }, value);
 }
 
-inline std::string serializeStruct(const Struct& data) {
+inline std::string serializeStruct(const Struct& s) {
     std::string out = "{";
     bool first = true;
-
-    for (const auto& [key, value] : data.items()) {
+    
+    for (const auto& [key, value] : s.items()) {
         if (!first) out += ",";
         first = false;
-        out += "\"" + key + "\":" + serializeValue(value);
+        out += key + ":" + serializeValue(value); 
     }
-
+    
     out += "}";
     return out;
+}
+
+inline std::string serializeStruct(const std::optional<Struct>& data) {
+    if (data.has_value()) {
+        return serializeStruct(data.value());
+    }
+    return "";
 }
