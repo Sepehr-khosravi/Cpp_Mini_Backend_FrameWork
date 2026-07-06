@@ -13,7 +13,6 @@ std::string getPath(){
 
     std::string result = std::string(main_dir).substr(0, pathLen - morePathLen );
 
-
     return result;
 };
 
